@@ -1,11 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Document</title>
+		<title>Screen Wake Lock</title>
+		<style>
+			body {
+				font-family: sans-serif;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				height: 100vh;
+				background-color: #131313;
+			}
+			.card {
+				background: rgb(178, 178, 178);
+				padding: 2rem;
+				border-radius: 12px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				text-align: center;
+			}
+			button {
+				padding: 12px 24px;
+				font-size: 1rem;
+				cursor: pointer;
+				border: none;
+				border-radius: 6px;
+				transition: background 0.3s;
+			}
+			.off {
+				background-color: #007bff;
+				color: white;
+			}
+			.on {
+				background-color: #dc3545;
+				color: white;
+			}
+			#status {
+				margin-top: 1rem;
+				font-weight: bold;
+			}
+		</style>
 	</head>
 	<body>
-		hi
+		<div class="card">
+			<h1>Wake Lock API</h1>
+
+			<button id="btnWakeLock" class="off">Ativar Wake Lock</button>
+
+			<div id="status">Status: Inativo</div>
+		</div>
+
+		<script>
+			const btnWakeLock = document.getElementById("btnWakeLock");
+			const statusDiv = document.getElementById("status");
+			let wakeLock = null;
+
+			const requestWakeLock = async () => {
+				try {
+					wakeLock = await navigator.wakeLock.request("screen");
+
+					statusDiv.textContent = "Status: Ativo";
+					btnWakeLock.textContent = "Desativar Wake Lock";
+					btnWakeLock.className = "on";
+
+					wakeLock.addEventListener("release", () => {
+						console.log("Wake Lock foi liberado.");
+						resetUI();
+					});
+				} catch (err) {
+					statusDiv.textContent = `Erro: ${err.name}, ${err.message}`;
+					statusDiv.style.color = "red";
+				}
+			};
+
+			const releaseWakeLock = () => {
+				if (wakeLock !== null) {
+					wakeLock.release();
+					wakeLock = null;
+				}
+			};
+
+			const resetUI = () => {
+				statusDiv.textContent = "Status: Inativo";
+				statusDiv.style.color = "black";
+				btnWakeLock.textContent = "Ativar Wake Lock";
+				btnWakeLock.className = "off";
+			};
+
+			btnWakeLock.addEventListener("click", () => {
+				if (wakeLock === null) {
+					requestWakeLock();
+				} else {
+					releaseWakeLock();
+				}
+			});
+
+			document.addEventListener("visibilitychange", async () => {
+				if (
+					wakeLock !== null &&
+					document.visibilityState === "visible"
+				) {
+					requestWakeLock();
+				}
+			});
+		</script>
 	</body>
 </html>
